@@ -11,13 +11,12 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up(): void
+public function up(): void
 {
     Schema::create('transactions', function (Blueprint $table) {
         $table->id();
-        $table->string('transaction_code')->unique();
+        $table->string('invoice_code')->unique();
         $table->decimal('total_amount', 15, 2);
-        $table->enum('type', ['sale', 'restock'])->default('sale');
         $table->timestamps();
     });
 
@@ -25,7 +24,7 @@ return new class extends Migration
         $table->id();
         $table->foreignId('transaction_id')->constrained()->onDelete('cascade');
         $table->foreignId('product_id')->constrained()->onDelete('cascade');
-        $table->integer('quantity');
+        $table->integer('qty');
         $table->decimal('price', 15, 2);
         $table->decimal('subtotal', 15, 2);
         $table->timestamps();

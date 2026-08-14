@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Transaction extends Model
 {
     use HasFactory;
-    protected $guarded = [];
+
+    protected $fillable = ['invoice_code', 'total_amount'];
 
     public function details()
     {
