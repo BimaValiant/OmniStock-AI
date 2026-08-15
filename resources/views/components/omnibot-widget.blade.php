@@ -34,6 +34,38 @@
 
 <!-- Script AJAX Chatbot -->
 <script>
+    function formatAiResponse(text) {
+        let html = text;
+        
+        // Format headers (starting with #)
+        html = html.replace(/^### (.*?)$/gm, '<p class="font-bold text-slate-200 mt-2">$1</p>');
+        html = html.replace(/^## (.*?)$/gm, '<p class="font-bold text-slate-100 text-base mt-3">$1</p>');
+        html = html.replace(/^# (.*?)$/gm, '<p class="font-bold text-white text-lg mt-4">$1</p>');
+        
+        // Format bold text
+        html = html.replace(/\*\*(.*?)\*\*/g, '<span class="font-semibold text-slate-100">$1</span>');
+        
+        // Format italic text
+        html = html.replace(/\*(.*?)\*/g, '<em class="text-slate-300">$1</em>');
+        
+        // Format numbered lists
+        html = html.replace(/^\d+\.\s+(.*?)$/gm, '<div class="ml-3 my-1"><span class="text-amber-400 font-semibold">•</span> $1</div>');
+        
+        // Format bullet points
+        html = html.replace(/^[-*]\s+(.*?)$/gm, '<div class="ml-3 my-1"><span class="text-amber-400 font-semibold">•</span> $1</div>');
+        
+        // Format code blocks (single backticks)
+        html = html.replace(/`(.*?)`/g, '<code class="bg-slate-900 px-1.5 py-0.5 rounded text-amber-300 font-mono text-xs">$1</code>');
+        
+        // Replace line breaks
+        html = html.replace(/\n/g, '<br>');
+        
+        // Remove extra <br> tags
+        html = html.replace(/<br><br>/g, '<br>');
+        
+        return html;
+    }
+
     document.getElementById('aiForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -79,10 +111,11 @@
             document.getElementById(loadingId).remove();
 
             if(data.status === 'success') {
+                const formattedReply = formatAiResponse(data.reply);
                 chatContainer.innerHTML += `
-                    <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/40">
-                        <p class="font-semibold text-amber-400 mb-1">🤖 OmniBot:</p>
-                        <p class="whitespace-pre-line">${data.reply}</p>
+                    <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/40">
+                        <p class="font-semibold text-amber-400 mb-2">🤖 OmniBot:</p>
+                        <div class="text-slate-300 text-sm space-y-2 leading-relaxed">${formattedReply}</div>
                     </div>
                 `;
             } else {

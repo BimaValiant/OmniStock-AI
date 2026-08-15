@@ -60,7 +60,7 @@
             </a>
 
             <!-- Inventory -->
-            <a href="{{ url('/') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 transition-all duration-200">
+            <a href="{{ url('/inventory') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 transition-all duration-200">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                 </svg>
@@ -75,8 +75,24 @@
                 Transactions
             </a>
 
+            <!-- Stock Movements -->
+            <a href="{{ url('/stock-movements') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 transition-all duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Stock Movements
+            </a>
+
+            <!-- Purchase Orders -->
+            <a href="{{ url('/purchase-orders') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 transition-all duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Purchase Orders
+            </a>
+
             <!-- Suppliers -->
-            <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 transition-all duration-200">
+            <a href="{{ url('/suppliers') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 transition-all duration-200">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
@@ -84,7 +100,7 @@
             </a>
 
             <!-- Reports -->
-            <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 transition-all duration-200">
+            <a href="{{ url('/reports') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 transition-all duration-200">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
@@ -92,7 +108,7 @@
             </a>
 
             <!-- Settings -->
-            <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 transition-all duration-200">
+            <a href="{{ url('/settings') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:bg-gray-800/50 hover:text-gray-200 transition-all duration-200">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -403,29 +419,33 @@
         </div>
     </div>
 
-    <!-- MODAL 2: RECORD SALE -->
-    <div id="recordSaleModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-slateCard border border-slateBorder rounded-2xl w-full max-w-sm p-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-headline font-bold text-white text-sm">Record Transaction Sale</h3>
-                <button onclick="closeModal('recordSaleModal')" class="text-slate-400 hover:text-white">✕</button>
+    <!-- Modal Record Sale -->
+    <div id="modalRecordSale" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center hidden z-50">
+        <div class="bg-[#131722] border border-gray-800 p-6 rounded-2xl w-full max-w-md shadow-2xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-base font-bold text-white">Record Transaction Sale</h3>
+                <button onclick="document.getElementById('modalRecordSale').classList.add('hidden')" class="text-gray-500 hover:text-white">&times;</button>
             </div>
-            <form id="recordSaleForm" class="space-y-3 text-xs">
+
+            <form id="formRecordSale" class="space-y-4">
                 <div>
-                    <label class="block text-slate-400 mb-1">Select Product</label>
-                    <select name="product_id" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Select Product</label>
+                    <select id="saleProductId" class="w-full bg-[#0c0e17] border border-gray-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500" required>
+                        <option value="">-- Choose Item --</option>
                         @foreach($products ?? [] as $p)
                             <option value="{{ $p->id }}">{{ $p->name }} (Stock: {{ $p->stock }})</option>
                         @endforeach
                     </select>
                 </div>
+
                 <div>
-                    <label class="block text-slate-400 mb-1">Quantity Sold</label>
-                    <input type="number" name="qty" min="1" value="1" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Quantity Sold</label>
+                    <input type="number" id="saleQty" min="1" value="1" class="w-full bg-[#0c0e17] border border-gray-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500" required>
                 </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('recordSaleModal')" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg">Cancel</button>
-                    <button type="submit" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg">Record Sale</button>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="document.getElementById('modalRecordSale').classList.add('hidden')" class="px-4 py-2 bg-gray-800 text-gray-300 text-xs rounded-xl font-semibold">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded-xl font-bold">Record Sale</button>
                 </div>
             </form>
         </div>
@@ -713,33 +733,32 @@
         });
 
         // AJAX Record Sale Form
-        document.getElementById('recordSaleForm').addEventListener('submit', async (e) => {
+        document.getElementById('formRecordSale')?.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
+
+            const productId = document.getElementById('saleProductId').value;
+            const qty = document.getElementById('saleQty').value;
 
             try {
                 const res = await fetch('/sales/record', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') 
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify({ product_id: productId, qty: qty })
                 });
 
-                const result = await res.json();
+                const data = await res.json();
 
-                if (res.ok && result.status === 'success') {
-                    closeModal('recordSaleModal');
+                if (res.ok) {
+                    alert(data.message || 'Penjualan berhasil dicatat!');
                     location.reload();
                 } else {
-                    alert(result.message || 'Gagal mencatat penjualan.');
+                    alert(data.message || 'Gagal mencatat penjualan!');
                 }
             } catch (err) {
-                console.error(err);
-                alert('Terjadi kesalahan pada server.');
+                alert('Terjadi kesalahan koneksi!');
             }
         });
 

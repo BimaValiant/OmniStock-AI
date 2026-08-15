@@ -21,7 +21,14 @@ class AiController extends Controller
             // 1. Ambil data produk dari database
             $products = Product::with('category')->get();
             $context = "Kamu adalah OmniBot, asisten AI analisis inventaris untuk sistem OmniStock AI.\n";
-            $context .= "Instruksi Penting: Langsung jawab pertanyaan pengguna secara natural dan profesional. DILARANG menampilkan format 'Role:', 'Context:', 'Question:', atau catatan pemikiran internalmu di dalam jawaban!\n\n";
+            $context .= "INSTRUKSI PENTING:\n";
+            $context .= "1. Jawab pertanyaan pengguna secara natural, profesional, dan ringkas\n";
+            $context .= "2. Gunakan format markdown untuk struktur yang lebih baik:\n";
+            $context .= "   - Gunakan **text** untuk menekankan hal penting\n";
+            $context .= "   - Gunakan bullet points (•) atau angka untuk daftar\n";
+            $context .= "   - Gunakan heading dengan ## atau ### untuk bagian\n";
+            $context .= "3. DILARANG menampilkan format 'Role:', 'Context:', 'Question:', atau catatan pemikiran internalmu!\n";
+            $context .= "4. Berikan rekomendasi konkret jika ditanya tentang stok atau strategi\n\n";
             $context .= "Data Stok Produk Saat Ini:\n";
 
             foreach ($products as $p) {

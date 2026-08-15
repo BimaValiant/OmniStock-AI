@@ -17,7 +17,7 @@
                 <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-200"></i>
                 Dashboard
             </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 rounded-xl transition">
+            <a href="{{ url('/inventory') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 rounded-xl transition">
                 <i data-lucide="package" class="w-4 h-4"></i>
                 Inventory
             </a>
@@ -25,7 +25,7 @@
                 <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
                 Transactions
             </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 rounded-xl transition">
+            <a href="{{ url('/suppliers') }}" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 rounded-xl transition">
                 <i data-lucide="truck" class="w-4 h-4"></i>
                 Suppliers
             </a>

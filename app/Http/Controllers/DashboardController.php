@@ -67,6 +67,24 @@ class DashboardController extends Controller
     return view('transactions', compact('transactions'));
 }
 
+    public function inventoryIndex(Request $request)
+    {
+        $query = Product::with('category');
+
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $query->latest()->get();
+        $categories = Category::all();
+
+        return view('inventory', compact('products', 'categories'));
+    }
+
     // Method Tambah Produk Baru
     public function storeProduct(Request $request)
     {
@@ -125,6 +143,11 @@ class DashboardController extends Controller
                 'price' => $product->selling_price,
                 'subtotal' => $totalAmount,
             ]);
+
+            // 4. Alert stok kritis otomatis
+            if ($product->fresh()->stock <= $product->min_stock_alert) {
+                \Log::warning("ALERT: Stok produk {$product->name} tersisa {$product->fresh()->stock} unit!");
+            }
         });
 
         return response()->json(['status' => 'success', 'message' => 'Penjualan berhasil dicatat!']);
@@ -202,5 +225,15 @@ class DashboardController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function reportsIndex()
+    {
+        $totalSales = Transaction::sum('total_amount');
+        $totalProducts = Product::count();
+        $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock_alert')->count();
+        $recentTransactions = Transaction::with('details.product')->latest()->take(5)->get();
+
+        return view('reports', compact('totalSales', 'totalProducts', 'lowStockCount', 'recentTransactions'));
     }
 }
