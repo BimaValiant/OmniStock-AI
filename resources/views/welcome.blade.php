@@ -32,6 +32,7 @@
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body class="bg-slateBg text-slate-300 antialiased font-sans min-h-screen flex selection:bg-slate-700 selection:text-white">
 
@@ -137,7 +138,48 @@
                 <button onclick="document.getElementById('modalRecordSale').classList.remove('hidden')" class="px-4 py-2 bg-[#131722] hover:bg-gray-800 border border-gray-800 rounded-xl text-xs font-semibold text-gray-200 transition-all">
     📄 Record Sale
 </button>
-                <button class="p-1.5 bg-[#18202F] border border-slateBorder rounded-lg text-slate-400 hover:text-slate-200">🔔</button>
+                <<!-- DROPDOWN NOTIFIKASI STOK MENIPIS -->
+<div class="relative">
+    <button id="notifDropdownBtn" onclick="toggleNotifDropdown()" class="p-1.5 bg-[#18202F] border border-slateBorder rounded-lg text-slate-400 hover:text-slate-200 relative transition">
+        🔔
+        @if(($lowStockCount ?? 0) > 0)
+            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-pulse">
+                {{ $lowStockCount }}
+            </span>
+        @endif
+    </button>
+
+    <!-- Menu Dropdown -->
+    <div id="notifDropdownMenu" class="hidden absolute right-0 mt-2 w-72 sm:w-80 bg-[#131927] border border-slateBorder rounded-xl shadow-2xl z-50 overflow-hidden">
+        <div class="p-3 bg-[#0B0F19] border-b border-slateBorder flex items-center justify-between">
+            <h4 class="font-headline font-bold text-white text-xs">Low Stock Alerts</h4>
+            <span class="text-[10px] bg-red-950/80 text-red-400 border border-red-800/40 px-2 py-0.5 rounded-full font-semibold">
+                {{ $lowStockCount ?? 0 }} Items Need Action
+            </span>
+        </div>
+
+        <div class="max-h-60 overflow-y-auto divide-y divide-slateBorder/50 custom-scrollbar">
+            @forelse($lowStockProducts ?? [] as $item)
+                <div class="p-3 hover:bg-slate-800/40 transition flex items-center justify-between gap-2">
+                    <div>
+                        <p class="text-xs font-semibold text-white leading-tight">{{ $item->name }}</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">SKU: {{ $item->sku }}</p>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <span class="text-xs font-bold {{ $item->stock == 0 ? 'text-red-400' : 'text-amber-400' }} block">
+                            {{ $item->stock == 0 ? 'Out of Stock' : 'Stok: '.$item->stock }}
+                        </span>
+                        <span class="text-[9px] text-slate-500">Min: {{ $item->min_stock_alert }}</span>
+                    </div>
+                </div>
+            @empty
+                <div class="p-4 text-center text-slate-500 text-xs">
+                    🎉 Semua stok barang dalam kondisi aman.
+                </div>
+            @endforelse
+        </div>
+    </div>
+</div>
                 <button class="p-1.5 bg-[#18202F] border border-slateBorder rounded-lg text-slate-400 hover:text-slate-200">🕒</button>
             </div>
         </div>
@@ -847,6 +889,21 @@
                 alert('Terjadi kesalahan pada server.');
             }
         }
+
+        // Toggle Dropdown Notifikasi Lonceng
+function toggleNotifDropdown() {
+    const dropdown = document.getElementById('notifDropdownMenu');
+    dropdown.classList.toggle('hidden');
+}
+
+// Close dropdown saat klik di luar area tombol
+document.addEventListener('click', (e) => {
+    const btn = document.getElementById('notifDropdownBtn');
+    const dropdown = document.getElementById('notifDropdownMenu');
+    if (btn && dropdown && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
     </script>
 </body>
 </html>

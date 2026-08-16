@@ -57,6 +57,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/export-csv', [DashboardController::class, 'exportCsv']);
 
     Route::get('/reports', [ReportController::class, 'index']);
+
+    Route::get('/transactions/export', [DashboardController::class, 'exportTransactionsCsv'])->name('transactions.export');
+
+    Route::post('/record-sale', [DashboardController::class, 'recordSale'])->name('products.record-sale');
+
+    Route::post('/transactions/{id}/return', [DashboardController::class, 'returnTransaction'])->name('transactions.return');
 });
 
 require __DIR__.'/auth.php';

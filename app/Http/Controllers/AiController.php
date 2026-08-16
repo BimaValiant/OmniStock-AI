@@ -18,22 +18,21 @@ class AiController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Prompt tidak boleh kosong!'], 400);
             }
 
-            // 1. Ambil data produk dari database
+            // 1. Definisikan System Instruction (Peran AI yang terisolasi)
+            $systemInstructionText = "Kamu adalah OmniBot, asisten AI analisis inventaris untuk sistem OmniStock AI.\n"
+                . "INSTRUKSI PENTING:\n"
+                . "1. Jawab pertanyaan pengguna secara natural, profesional, ramah, dan ringkas.\n"
+                . "2. Gunakan format markdown standar (seperti **bold**, list dengan • atau angka, dan heading ##/###).\n"
+                . "3. JANGAN PERNAH menampilkan teks instruksi internal, catatan pemikiran, atau format 'Role:', 'Context:', 'Question:'. Langsung berikan isi jawabannya.\n"
+                . "4. Berikan rekomendasi konkret jika ditanya tentang stok atau strategi.";
+
+            // 2. Ambil data produk dari database untuk konteks data
             $products = Product::with('category')->get();
-            $context = "Kamu adalah OmniBot, asisten AI analisis inventaris untuk sistem OmniStock AI.\n";
-            $context .= "INSTRUKSI PENTING:\n";
-            $context .= "1. Jawab pertanyaan pengguna secara natural, profesional, dan ringkas\n";
-            $context .= "2. Gunakan format markdown untuk struktur yang lebih baik:\n";
-            $context .= "   - Gunakan **text** untuk menekankan hal penting\n";
-            $context .= "   - Gunakan bullet points (•) atau angka untuk daftar\n";
-            $context .= "   - Gunakan heading dengan ## atau ### untuk bagian\n";
-            $context .= "3. DILARANG menampilkan format 'Role:', 'Context:', 'Question:', atau catatan pemikiran internalmu!\n";
-            $context .= "4. Berikan rekomendasi konkret jika ditanya tentang stok atau strategi\n\n";
-            $context .= "Data Stok Produk Saat Ini:\n";
+            $dataContext = "Data Stok Produk Saat Ini:\n";
 
             foreach ($products as $p) {
                 $categoryName = $p->category->name ?? 'Uncategorized';
-                $context .= "- Nama: {$p->name} | SKU: {$p->sku} | Kategori: {$categoryName} | Stok: {$p->stock} | Min Alert: {$p->min_stock_alert} | Harga Jual: Rp {$p->selling_price}\n";
+                $dataContext .= "- Nama: {$p->name} | SKU: {$p->sku} | Kategori: {$categoryName} | Stok: {$p->stock} | Min Alert: {$p->min_stock_alert} | Harga Jual: Rp {$p->selling_price}\n";
             }
 
             $apiKey = env('GEMINI_API_KEY');
@@ -42,7 +41,23 @@ class AiController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'GEMINI_API_KEY belum terpasang di .env!'], 400);
             }
 
-            // 2. Coba kirim request ke API
+            // Payload body standar Gemini API v1beta dengan system_instruction
+            $payload = [
+                'system_instruction' => [
+                    'parts' => [
+                        ['text' => $systemInstructionText]
+                    ]
+                ],
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $dataContext . "\nPertanyaan User: " . $userPrompt]
+                        ]
+                    ]
+                ]
+            ];
+
+            // 3. Coba kirim request ke API berdasarkan model yang tersedia
             $models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-exp'];
             $aiReply = null;
             $errorLog = '';
@@ -50,22 +65,12 @@ class AiController extends Controller
             foreach ($models as $model) {
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
                 
-                $response = Http::withoutVerifying()->post($url, [
-                    'contents' => [
-                        [
-                            'parts' => [
-                                ['text' => $context . "\nPertanyaan User: " . $userPrompt]
-                            ]
-                        ]
-                    ]
-                ]);
+                $response = Http::withoutVerifying()->post($url, $payload);
 
                 if ($response->successful()) {
                     $rawText = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? null;
                     if ($rawText) {
-                        // Saring teks pemikiran internal / draft jika kebetulan terikut
-                        $aiReply = preg_replace('/(Role:|Context\/Data:|Question:|Identification of|Refining for|Drafting the response:).*?(\n\n|\r\n\r\n)/s', '', $rawText);
-                        $aiReply = trim($aiReply);
+                        $aiReply = trim($rawText);
                         break;
                     }
                 } else {
@@ -73,7 +78,7 @@ class AiController extends Controller
                 }
             }
 
-            // 3. Fallback jika model spesifik di atas tidak merespon
+            // 4. Fallback dinamis jika model statis gagal
             if (!$aiReply) {
                 $listRes = Http::withoutVerifying()->get("https://generativelanguage.googleapis.com/v1beta/models?key={$apiKey}");
                 
@@ -84,15 +89,12 @@ class AiController extends Controller
                             $modelName = $m['name'];
                             $url = "https://generativelanguage.googleapis.com/v1beta/{$modelName}:generateContent?key={$apiKey}";
                             
-                            $resDynamic = Http::withoutVerifying()->post($url, [
-                                'contents' => [['parts' => [['text' => $context . "\nPertanyaan User: " . $userPrompt]]]]
-                            ]);
+                            $resDynamic = Http::withoutVerifying()->post($url, $payload);
 
                             if ($resDynamic->successful()) {
                                 $rawText = $resDynamic->json()['candidates'][0]['content']['parts'][0]['text'] ?? null;
                                 if ($rawText) {
-                                    $aiReply = preg_replace('/(Role:|Context\/Data:|Question:|Identification of|Refining for|Drafting the response:).*?(\n\n|\r\n\r\n)/s', '', $rawText);
-                                    $aiReply = trim($aiReply);
+                                    $aiReply = trim($rawText);
                                     break;
                                 }
                             }
@@ -108,7 +110,7 @@ class AiController extends Controller
                 ], 400);
             }
 
-            // 4. Simpan log
+            // 5. Simpan log obrolan
             try {
                 AiChatLog::create([
                     'user_prompt' => $userPrompt,

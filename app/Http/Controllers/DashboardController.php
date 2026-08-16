@@ -40,15 +40,18 @@ class DashboardController extends Controller
         $categories = Category::all();
 
         // 2. Statistics (Dinamis Real-time)
-        $totalAssetValue = Product::selectRaw('SUM(stock * selling_price) as total')->value('total') ?? 0;
-        $lowStockCount   = Product::whereColumn('stock', '<=', 'min_stock_alert')->where('stock', '>', 0)->count();
-        $recentLogs      = AiChatLog::latest()->take(5)->get();
+        $totalAssetValue  = Product::selectRaw('SUM(stock * selling_price) as total')->value('total') ?? 0;
+        
+        // Ambil data barang menipis/habis untuk Notifikasi Lonceng Header
+        $lowStockProducts = Product::whereColumn('stock', '<=', 'min_stock_alert')->orderBy('stock', 'asc')->get();
+        $lowStockCount    = $lowStockProducts->count();
+        
+        $recentLogs       = AiChatLog::latest()->take(5)->get();
 
         // Total akumulasi revenue agar presisi dengan halaman Transactions
-        $monthlySales = Transaction::sum('total_amount') ?? 0;
+        $monthlySales = Transaction::where('status', '!=', 'Returned')->sum('total_amount') ?? 0;
 
-        // --- HANYA BAGIAN INI YANG DIUBAH ---
-        // Hitung Profit Margin Realtime secara Akurat berdasarkan Barang Terjual (Identik dengan ReportController)
+        // Hitung Profit Margin Realtime
         $totalCost = 0;
         $allTransactions = Transaction::with('details.product')->get();
         
@@ -62,7 +65,6 @@ class DashboardController extends Controller
         $avgMargin = $monthlySales > 0 
             ? round((($monthlySales - $totalCost) / $monthlySales) * 100, 1) 
             : 0;
-        // ------------------------------------
 
         // Respons AJAX untuk live search/filter
         if ($request->ajax()) {
@@ -79,6 +81,7 @@ class DashboardController extends Controller
             'products',
             'categories',
             'totalAssetValue',
+            'lowStockProducts',
             'lowStockCount',
             'recentLogs',
             'monthlySales',
@@ -89,7 +92,9 @@ class DashboardController extends Controller
     public function transactionsIndex()
     {
         $transactions = Transaction::with('details.product')->latest()->get();
-        return view('transactions', compact('transactions'));
+        $products = Product::where('stock', '>', 0)->get();
+
+        return view('transactions', compact('transactions', 'products'));
     }
 
     public function inventoryIndex(Request $request)
@@ -247,10 +252,18 @@ class DashboardController extends Controller
 
     public function reportsIndex()
     {
-        $totalSales = Transaction::sum('total_amount');
+        // 1. Total Revenue hanya menghitung yang statusnya BUKAN Returned
+        $totalSales = Transaction::where('status', '!=', 'Returned')->sum('total_amount');
+        
         $totalProducts = Product::count();
         $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock_alert')->where('stock', '>', 0)->count();
-        $recentTransactions = Transaction::with('details.product')->latest()->take(5)->get();
+        
+        // 2. Transaksi terbaru juga memfilter yang aktif saja
+        $recentTransactions = Transaction::with('details.product')
+            ->where('status', '!=', 'Returned')
+            ->latest()
+            ->take(5)
+            ->get();
 
         return view('reports', compact('totalSales', 'totalProducts', 'lowStockCount', 'recentTransactions'));
     }
@@ -277,5 +290,73 @@ class DashboardController extends Controller
             ->setPaper('A4', 'portrait');
 
         return $pdf->download('invoice-' . $transaction->invoice_code . '.pdf');
+    }
+
+    // EXPORT ALL TRANSACTIONS CSV
+    public function exportTransactionsCsv()
+    {
+        $fileName = 'OmniStock_Transactions_' . date('Y-m-d') . '.csv';
+        $transactions = Transaction::with('details.product')->latest()->get();
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = ['Date / Time', 'Invoice Code', 'Items Purchased', 'Total Amount', 'Status'];
+
+        $callback = function() use($transactions, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($transactions as $t) {
+                $items = $t->details->map(fn($d) => ($d->product->name ?? 'Item') . " (x{$d->qty})")->implode(', ');
+                fputcsv($file, [
+                    $t->created_at->format('M d, Y H:i:s'),
+                    $t->invoice_code,
+                    $items,
+                    $t->total_amount,
+                    $t->status ?? 'Completed'
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    // METHOD RETUR TRANSAKSI PENJUALAN
+    public function returnTransaction($id)
+    {
+        $transaction = Transaction::with('details')->findOrFail($id);
+
+        if ($transaction->status === 'Returned') {
+            return back()->with('error', 'Transaksi sudah diretur!');
+        }
+
+        DB::transaction(function () use ($transaction) {
+            $transaction->update(['status' => 'Returned']);
+
+            foreach ($transaction->details as $detail) {
+                if ($detail->product_id) {
+                    $product = Product::find($detail->product_id);
+                    if ($product) {
+                        $product->increment('stock', $detail->qty);
+                        \App\Models\StockMovement::create([
+                            'product_id' => $product->id,
+                            'type'       => 'Return',
+                            'quantity'   => $detail->qty,
+                            'reason'     => 'Retur Invoice: ' . $transaction->invoice_code,
+                            'by'         => 'Bima Valiant'
+                        ]);
+                    }
+                }
+            }
+        });
+
+        return back()->with('success', 'Retur berhasil!');
     }
 }

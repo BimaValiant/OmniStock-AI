@@ -9,7 +9,7 @@ class Transaction extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['invoice_code', 'total_amount'];
+    protected $fillable = ['invoice_code', 'total_amount', 'status'];
 
     public function details()
     {

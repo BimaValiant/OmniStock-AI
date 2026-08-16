@@ -104,7 +104,9 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-slateCard border border-slateBorder rounded-xl p-4">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Revenue</p>
-                <h2 class="font-headline text-2xl font-extrabold text-white mb-2">Rp {{ number_format($totalSales ?? 16650000, 0, ',', '.') }}</h2>
+                <h2 class="font-headline text-2xl font-extrabold text-white">
+    Rp {{ number_format($totalSales, 0, ',', '.') }}
+</h2>
                 <div class="flex items-center gap-1.5 text-[11px]">
                     <span class="bg-emerald-950/60 text-emerald-400 px-1.5 py-0.2 rounded font-semibold border border-emerald-800/40">+4.2%</span>
                     <span class="text-slate-500">vs last month</span>
