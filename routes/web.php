@@ -21,6 +21,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/products/{id}', [DashboardController::class, 'destroyProduct'])->name('products.destroy');
 
     Route::get('/transactions', [DashboardController::class, 'transactionsIndex']);
+    Route::get('/transactions/{transaction}/invoice/pdf', [DashboardController::class, 'downloadInvoicePdf'])->name('transactions.invoice.pdf');
     Route::get('/inventory', [DashboardController::class, 'inventoryIndex']);
     Route::get('/reports', [DashboardController::class, 'reportsIndex']);
 
@@ -42,6 +43,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
     Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile');
+    Route::get('/notifications', [DashboardController::class, 'notificationsIndex'])->name('notifications.index');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

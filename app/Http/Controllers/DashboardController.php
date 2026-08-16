@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\AiChatLog;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -38,9 +39,9 @@ class DashboardController extends Controller
         $products = $query->latest()->get();
         $categories = Category::all();
 
-        // 2. Statistics
+        // 2. Statistics (Koreksi logika lowStockCount)
         $totalAssetValue = Product::selectRaw('SUM(stock * selling_price) as total')->value('total') ?? 0;
-        $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock_alert')->count();
+        $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock_alert')->where('stock', '>', 0)->count();
         $recentLogs = AiChatLog::latest()->take(5)->get();
 
         // Respons AJAX untuk live search/filter
@@ -62,10 +63,10 @@ class DashboardController extends Controller
     }
 
     public function transactionsIndex()
-{
-    $transactions = Transaction::with('details.product')->latest()->get();
-    return view('transactions', compact('transactions'));
-}
+    {
+        $transactions = Transaction::with('details.product')->latest()->get();
+        return view('transactions', compact('transactions'));
+    }
 
     public function inventoryIndex(Request $request)
     {
@@ -231,9 +232,33 @@ class DashboardController extends Controller
     {
         $totalSales = Transaction::sum('total_amount');
         $totalProducts = Product::count();
-        $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock_alert')->count();
+        $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock_alert')->where('stock', '>', 0)->count();
         $recentTransactions = Transaction::with('details.product')->latest()->take(5)->get();
 
         return view('reports', compact('totalSales', 'totalProducts', 'lowStockCount', 'recentTransactions'));
+    }
+
+    public function notificationsIndex()
+    {
+        $lowStockProducts = Product::with('category')
+            ->whereColumn('stock', '<=', 'min_stock_alert')
+            ->orderBy('stock', 'asc')
+            ->get();
+
+        $criticalProducts = Product::with('category')
+            ->where('stock', 0)
+            ->get();
+
+        return view('notifications.index', compact('lowStockProducts', 'criticalProducts'));
+    }
+
+    public function downloadInvoicePdf(Transaction $transaction)
+    {
+        $transaction->load(['details.product']);
+
+        $pdf = Pdf::loadView('invoices.transaction', compact('transaction'))
+            ->setPaper('A4', 'portrait');
+
+        return $pdf->download('invoice-' . $transaction->invoice_code . '.pdf');
     }
 }
