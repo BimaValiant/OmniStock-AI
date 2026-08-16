@@ -39,17 +39,39 @@ class DashboardController extends Controller
         $products = $query->latest()->get();
         $categories = Category::all();
 
-        // 2. Statistics (Koreksi logika lowStockCount)
+        // 2. Statistics (Dinamis Real-time)
         $totalAssetValue = Product::selectRaw('SUM(stock * selling_price) as total')->value('total') ?? 0;
-        $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock_alert')->where('stock', '>', 0)->count();
-        $recentLogs = AiChatLog::latest()->take(5)->get();
+        $lowStockCount   = Product::whereColumn('stock', '<=', 'min_stock_alert')->where('stock', '>', 0)->count();
+        $recentLogs      = AiChatLog::latest()->take(5)->get();
+
+        // Total akumulasi revenue agar presisi dengan halaman Transactions
+        $monthlySales = Transaction::sum('total_amount') ?? 0;
+
+        // --- HANYA BAGIAN INI YANG DIUBAH ---
+        // Hitung Profit Margin Realtime secara Akurat berdasarkan Barang Terjual (Identik dengan ReportController)
+        $totalCost = 0;
+        $allTransactions = Transaction::with('details.product')->get();
+        
+        foreach ($allTransactions as $tx) {
+            foreach ($tx->details as $detail) {
+                $purchasePrice = $detail->product->purchase_price ?? 0;
+                $totalCost += ($purchasePrice * $detail->qty);
+            }
+        }
+
+        $avgMargin = $monthlySales > 0 
+            ? round((($monthlySales - $totalCost) / $monthlySales) * 100, 1) 
+            : 0;
+        // ------------------------------------
 
         // Respons AJAX untuk live search/filter
         if ($request->ajax()) {
             return response()->json([
-                'status' => 'success',
-                'products' => $products,
-                'lowStockCount' => $lowStockCount
+                'status'          => 'success',
+                'products'        => $products,
+                'lowStockCount'   => $lowStockCount,
+                'totalAssetValue' => $totalAssetValue,
+                'monthlySales'    => $monthlySales
             ]);
         }
 
@@ -58,7 +80,9 @@ class DashboardController extends Controller
             'categories',
             'totalAssetValue',
             'lowStockCount',
-            'recentLogs'
+            'recentLogs',
+            'monthlySales',
+            'avgMargin'
         ));
     }
 
@@ -94,15 +118,14 @@ class DashboardController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:products,sku',
-            'category_id' => 'nullable|exists:categories,id',
-            'stock' => 'required|integer|min:0',
+            'name'            => 'required|string|max:255',
+            'sku'             => 'required|string|unique:products,sku',
+            'category_id'     => 'nullable|exists:categories,id',
+            'stock'           => 'required|integer|min:0',
             'min_stock_alert' => 'required|integer|min:0',
-            'selling_price' => 'required|numeric|min:0',
+            'selling_price'   => 'required|numeric|min:0',
         ]);
 
-        // Mencegah error MySQL pada kolom purchase_price yang NOT NULL
         $validated['purchase_price'] = $request->purchase_price ?? $request->selling_price;
 
         Product::create($validated);
@@ -115,7 +138,7 @@ class DashboardController extends Controller
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'qty' => 'required|integer|min:1',
+            'qty'        => 'required|integer|min:1',
         ]);
 
         $product = Product::findOrFail($validated['product_id']);
@@ -124,28 +147,23 @@ class DashboardController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Stok tidak mencukupi!'], 400);
         }
 
-        // Gunakan DB Transaction agar potong stok dan simpan transaksi bersifat atomik
         DB::transaction(function () use ($product, $validated) {
-            // 1. Potong stok produk
             $product->decrement('stock', $validated['qty']);
 
-            // 2. Buat header transaksi baru
             $totalAmount = $product->selling_price * $validated['qty'];
             $transaction = Transaction::create([
                 'invoice_code' => 'INV-' . strtoupper(uniqid()),
                 'total_amount' => $totalAmount,
             ]);
 
-            // 3. Simpan detail transaksi
             TransactionDetail::create([
                 'transaction_id' => $transaction->id,
-                'product_id' => $product->id,
-                'qty' => $validated['qty'],
-                'price' => $product->selling_price,
-                'subtotal' => $totalAmount,
+                'product_id'     => $product->id,
+                'qty'            => $validated['qty'],
+                'price'          => $product->selling_price,
+                'subtotal'       => $totalAmount,
             ]);
 
-            // 4. Alert stok kritis otomatis
             if ($product->fresh()->stock <= $product->min_stock_alert) {
                 \Log::warning("ALERT: Stok produk {$product->name} tersisa {$product->fresh()->stock} unit!");
             }
@@ -164,15 +182,14 @@ class DashboardController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:products,sku,' . $id,
-            'category_id' => 'nullable|exists:categories,id',
-            'stock' => 'required|integer|min:0',
+            'name'            => 'required|string|max:255',
+            'sku'             => 'required|string|unique:products,sku,' . $id,
+            'category_id'     => 'nullable|exists:categories,id',
+            'stock'           => 'required|integer|min:0',
             'min_stock_alert' => 'required|integer|min:0',
-            'selling_price' => 'required|numeric|min:0',
+            'selling_price'   => 'required|numeric|min:0',
         ]);
 
-        // Jaga-jaga kalau purchase_price dari record lama null/diisi nilai baru
         $validated['purchase_price'] = $request->purchase_price ?? $product->purchase_price ?? $request->selling_price;
 
         $product->update($validated);

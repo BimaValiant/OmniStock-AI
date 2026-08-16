@@ -29,13 +29,13 @@ class StockMovement extends Model
 
     public function getTypeLabel()
     {
-        return match($this->type) {
-            'in' => '📥 Stock In',
-            'out' => '📤 Stock Out',
-            'adjustment' => '⚙️ Adjustment',
-            'return' => '↩️ Return',
-            'damage' => '⚠️ Damage',
-            default => $this->type
+        return match(strtolower($this->type)) {
+            'in', 'stock in'       => '📥 Stock In',
+            'out', 'stock out'     => '📤 Stock Out',
+            'adjustment'           => '⚙️ Adjustment',
+            'return'               => '↩️ Return',
+            'damage'               => '⚠️ Damage',
+            default                => $this->type
         };
     }
 }

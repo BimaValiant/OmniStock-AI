@@ -158,47 +158,51 @@
             </div>
         </div>
 
-        <!-- 4 STAT CARDS ROW (DYNAMIC DATA) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-slateCard border border-slateBorder rounded-xl p-4 relative">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Asset Value</p>
-                <h2 class="font-headline text-2xl font-extrabold text-white mb-2">Rp {{ number_format($totalAssetValue ?? 1200000000, 0, ',', '.') }}</h2>
-                <div class="flex items-center gap-1.5 text-[11px]">
-                    <span class="bg-emerald-950/60 text-emerald-400 px-1.5 py-0.2 rounded font-semibold border border-emerald-800/40">+4.2%</span>
-                    <span class="text-slate-500">vs last month</span>
-                </div>
-            </div>
-
-            <div class="bg-slateCard border border-slateBorder rounded-xl p-4 relative">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Monthly Sales</p>
-                <h2 class="font-headline text-2xl font-extrabold text-white mb-2">+12%</h2>
-                <div class="flex items-center gap-1.5 text-[11px]">
-                    <span class="bg-emerald-950/60 text-emerald-400 px-1.5 py-0.2 rounded font-semibold border border-emerald-800/40">Target Met</span>
-                    <span class="text-slate-500">Steady growth</span>
-                </div>
-            </div>
-
-            <div class="bg-[#1C1420] border border-red-900/30 rounded-xl p-4 relative">
-                <p class="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-1">⚠️ Low Stock Alerts</p>
-                <div class="flex items-baseline gap-1.5 mb-2">
-                    <span class="font-headline text-2xl font-extrabold text-white">{{ $lowStockCount ?? 5 }}</span>
-                    <span class="text-xs text-slate-400">items</span>
-                </div>
-                <div class="flex items-center gap-1.5 text-[11px]">
-                    <span class="bg-amber-950/80 text-amber-400 px-1.5 py-0.2 rounded font-semibold border border-amber-800/40">Amber Status</span>
-                    <span class="text-slate-400">Action required</span>
-                </div>
-            </div>
-
-            <div class="bg-slateCard border border-slateBorder rounded-xl p-4 relative">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Retain Margin</p>
-                <h2 class="font-headline text-2xl font-extrabold text-white mb-2">24%</h2>
-                <div class="flex items-center gap-1.5 text-[11px]">
-                    <span class="bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded font-semibold">Stable</span>
-                    <span class="text-slate-500">Consistent average</span>
-                </div>
-            </div>
+       <!-- 4 STAT CARDS ROW (FULL DYNAMIC DATA) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <!-- Card 1: Total Asset Value -->
+    <div class="bg-slateCard border border-slateBorder rounded-xl p-4 relative">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Asset Value</p>
+        <h2 class="font-headline text-2xl font-extrabold text-white mb-2">Rp {{ number_format($totalAssetValue ?? 0, 0, ',', '.') }}</h2>
+        <div class="flex items-center gap-1.5 text-[11px]">
+            <span class="bg-emerald-950/60 text-emerald-400 px-1.5 py-0.5 rounded font-semibold border border-emerald-800/40">Real-time</span>
+            <span class="text-slate-500">inventory asset</span>
         </div>
+    </div>
+
+    <!-- Card 2: Monthly Sales -->
+    <div class="bg-slateCard border border-slateBorder rounded-xl p-4 relative">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Monthly Revenue</p>
+        <h2 class="font-headline text-2xl font-extrabold text-white mb-2">Rp {{ number_format($monthlySales ?? 0, 0, ',', '.') }}</h2>
+        <div class="flex items-center gap-1.5 text-[11px]">
+            <span class="bg-emerald-950/60 text-emerald-400 px-1.5 py-0.5 rounded font-semibold border border-emerald-800/40">This Month</span>
+            <span class="text-slate-500">total sales</span>
+        </div>
+    </div>
+
+    <!-- Card 3: Low Stock Alerts -->
+    <div class="bg-[#1C1420] border border-red-900/30 rounded-xl p-4 relative">
+        <p class="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-1">⚠️ Low Stock Alerts</p>
+        <div class="flex items-baseline gap-1.5 mb-2">
+            <span class="font-headline text-2xl font-extrabold text-white">{{ $lowStockCount ?? 0 }}</span>
+            <span class="text-xs text-slate-400">items</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-[11px]">
+            <span class="bg-amber-950/80 text-amber-400 px-1.5 py-0.5 rounded font-semibold border border-amber-800/40">Action Needed</span>
+            <span class="text-slate-400">re-order stock</span>
+        </div>
+    </div>
+
+    <!-- Card 4: Retain Margin -->
+    <div class="bg-slateCard border border-slateBorder rounded-xl p-4 relative">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Avg Profit Margin</p>
+        <h2 class="font-headline text-2xl font-extrabold text-white mb-2">{{ number_format($avgMargin ?? 0, 1) }}%</h2>
+        <div class="flex items-center gap-1.5 text-[11px]">
+            <span class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-semibold">Stable Rate</span>
+            <span class="text-slate-500">average margin</span>
+        </div>
+    </div>
+</div>
 
         <!-- MIDDLE SECTION: CHART + OMNIBOT PANEL -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -370,54 +374,63 @@
         </div>
     </div>
 
-    <!-- MODAL 1: ADD PRODUCT -->
-    <div id="addProductModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-slateCard border border-slateBorder rounded-2xl w-full max-w-md p-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-headline font-bold text-white text-sm">Add New Product</h3>
-                <button onclick="closeModal('addProductModal')" class="text-slate-400 hover:text-white">✕</button>
-            </div>
-            <form id="addProductForm" class="space-y-3 text-xs">
-                <div>
-                    <label class="block text-slate-400 mb-1">Product Name</label>
-                    <input type="text" name="name" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-slate-400 mb-1">SKU</label>
-                        <input type="text" name="sku" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Category</label>
-                        <select name="category_id" class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
-                            <option value="">General</option>
-                            @foreach($categories ?? [] as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-slate-400 mb-1">Stock Quantity</label>
-                        <input type="number" name="stock" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Min Stock Alert</label>
-                        <input type="number" name="min_stock_alert" value="10" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-slate-400 mb-1">Selling Price (Rp)</label>
-                    <input type="number" name="selling_price" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('addProductModal')" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg">Cancel</button>
-                    <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg">Save Product</button>
-                </div>
-            </form>
+   <!-- MODAL 1: ADD PRODUCT -->
+<div id="addProductModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-slateCard border border-slateBorder rounded-2xl w-full max-w-md p-6 shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-headline font-bold text-white text-sm">Add New Product</h3>
+            <button onclick="closeModal('addProductModal')" class="text-slate-400 hover:text-white">✕</button>
         </div>
+        <form id="addProductForm" class="space-y-3 text-xs">
+            <div>
+                <label class="block text-slate-400 mb-1">Product Name</label>
+                <input type="text" name="name" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-slate-400 mb-1">SKU</label>
+                    <input type="text" name="sku" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Category</label>
+                    <select name="category_id" class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
+                        <option value="">General</option>
+                        @foreach($categories ?? [] as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-slate-400 mb-1">Stock Quantity</label>
+                    <input type="number" name="stock" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Min Stock Alert</label>
+                    <input type="number" name="min_stock_alert" value="10" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
+                </div>
+            </div>
+
+            <!-- BAGIAN HARGA BELI & HARGA JUAL (PERBAIKAN MARGIN) -->
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-slate-400 mb-1">Purchase Price / Modal (Rp)</label>
+                    <input type="number" name="purchase_price" required placeholder="Harga beli gudang" class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Selling Price / Jual (Rp)</label>
+                    <input type="number" name="selling_price" required placeholder="Harga jual" class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
+                </div>
+            </div>
+
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="closeModal('addProductModal')" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg">Cancel</button>
+                <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg">Save Product</button>
+            </div>
+        </form>
     </div>
+</div>
 
     <!-- Modal Record Sale -->
     <div id="modalRecordSale" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center hidden z-50">

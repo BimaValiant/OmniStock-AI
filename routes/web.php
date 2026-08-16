@@ -8,6 +8,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\PurchaseOrderController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ReportController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -23,7 +24,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/transactions', [DashboardController::class, 'transactionsIndex']);
     Route::get('/transactions/{transaction}/invoice/pdf', [DashboardController::class, 'downloadInvoicePdf'])->name('transactions.invoice.pdf');
     Route::get('/inventory', [DashboardController::class, 'inventoryIndex']);
-    Route::get('/reports', [DashboardController::class, 'reportsIndex']);
 
     Route::get('/suppliers', [SupplierController::class, 'index']);
     Route::post('/suppliers', [SupplierController::class, 'store']);
@@ -41,8 +41,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/inventory/export-csv', [DashboardController::class, 'exportCsv'])->name('inventory.export');
 
+    // Route Settings (Diperbarui)
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+    Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.general');
     Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile');
+
     Route::get('/notifications', [DashboardController::class, 'notificationsIndex'])->name('notifications.index');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -50,6 +53,10 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::post('/ai/ask', [AiController::class, 'ask'])->name('ai.ask');
+
+    Route::get('/export-csv', [DashboardController::class, 'exportCsv']);
+
+    Route::get('/reports', [ReportController::class, 'index']);
 });
 
 require __DIR__.'/auth.php';
