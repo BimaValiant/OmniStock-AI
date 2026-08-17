@@ -104,9 +104,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-slateCard border border-slateBorder rounded-xl p-4">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Revenue</p>
-                <h2 class="font-headline text-2xl font-extrabold text-white">
-    Rp {{ number_format($totalSales, 0, ',', '.') }}
-</h2>
+                <h2 class="font-headline text-2xl font-extrabold text-white mb-2">Rp {{ number_format($totalSales ?? 0, 0, ',', '.') }}</h2>
                 <div class="flex items-center gap-1.5 text-[11px]">
                     <span class="bg-emerald-950/60 text-emerald-400 px-1.5 py-0.2 rounded font-semibold border border-emerald-800/40">+4.2%</span>
                     <span class="text-slate-500">vs last month</span>
@@ -115,7 +113,7 @@
 
             <div class="bg-slateCard border border-slateBorder rounded-xl p-4">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Transactions</p>
-                <h2 class="font-headline text-2xl font-extrabold text-white mb-2">{{ isset($recentTransactions) ? $recentTransactions->count() : 5 }} Sales</h2>
+                <h2 class="font-headline text-2xl font-extrabold text-white mb-2">{{ isset($recentTransactions) ? $recentTransactions->count() : 0 }} Sales</h2>
                 <div class="flex items-center gap-1.5 text-[11px]">
                     <span class="bg-emerald-950/60 text-emerald-400 px-1.5 py-0.2 rounded font-semibold border border-emerald-800/40">Active</span>
                     <span class="text-slate-500">Completed orders</span>
@@ -124,7 +122,7 @@
 
             <div class="bg-slateCard border border-slateBorder rounded-xl p-4">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Low Stock Count</p>
-                <h2 class="font-headline text-2xl font-extrabold text-amber-400 mb-2">{{ $lowStockCount ?? 1 }} Items</h2>
+                <h2 class="font-headline text-2xl font-extrabold text-amber-400 mb-2">{{ $lowStockCount ?? 0 }} Items</h2>
                 <div class="flex items-center gap-1.5 text-[11px]">
                     <span class="bg-amber-950/80 text-amber-400 px-1.5 py-0.2 rounded font-semibold border border-amber-800/40">Attention</span>
                     <span class="text-slate-400">Action required</span>
@@ -132,8 +130,8 @@
             </div>
 
             <div class="bg-slateCard border border-slateBorder rounded-xl p-4">
-               <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Profit Margin</p>
-<h2 class="font-headline text-2xl font-extrabold text-white mb-2">{{ $profitMargin ?? 91.4 }}%</h2>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Profit Margin</p>
+                <h2 class="font-headline text-2xl font-extrabold text-white mb-2">{{ $avgMargin ?? 0 }}%</h2>
                 <div class="flex items-center gap-1.5 text-[11px]">
                     <span class="bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded font-semibold">Stable</span>
                     <span class="text-slate-500">Consistent average</span>
@@ -155,34 +153,17 @@
             <div class="bg-slateCard border border-slateBorder rounded-xl p-5">
                 <h3 class="font-headline font-bold text-white text-sm mb-4">Top Performing Products</h3>
                 <div class="space-y-3">
-                    <div class="flex items-center justify-between text-xs p-2.5 rounded-lg bg-[#0f1420] border border-slateBorder/60">
-                        <div>
-                            <p class="font-semibold text-white">Braking System Brembo</p>
-                            <p class="text-[10px] text-slate-400">3 units sold</p>
+                    @forelse($topProducts ?? [] as $tp)
+                        <div class="flex items-center justify-between text-xs p-2.5 rounded-lg bg-[#0f1420] border border-slateBorder/60">
+                            <div>
+                                <p class="font-semibold text-white">{{ $tp->product->name ?? 'Deleted Item' }}</p>
+                                <p class="text-[10px] text-slate-400">{{ $tp->total_qty }} units sold</p>
+                            </div>
+                            <span class="font-bold text-emerald-400">Rp {{ number_format($tp->total_revenue, 0, ',', '.') }}</span>
                         </div>
-                        <span class="font-bold text-emerald-400">Rp 5.550.000</span>
-                    </div>
-                    <div class="flex items-center justify-between text-xs p-2.5 rounded-lg bg-[#0f1420] border border-slateBorder/60">
-                        <div>
-                            <p class="font-semibold text-white">Samsung S25 Ultra</p>
-                            <p class="text-[10px] text-slate-400">1 unit sold</p>
-                        </div>
-                        <span class="font-bold text-emerald-400">Rp 5.300.000</span>
-                    </div>
-                    <div class="flex items-center justify-between text-xs p-2.5 rounded-lg bg-[#0f1420] border border-slateBorder/60">
-                        <div>
-                            <p class="font-semibold text-white">Custom Exhaust Header</p>
-                            <p class="text-[10px] text-slate-400">5 units sold</p>
-                        </div>
-                        <span class="font-bold text-emerald-400">Rp 3.750.000</span>
-                    </div>
-                    <div class="flex items-center justify-between text-xs p-2.5 rounded-lg bg-[#0f1420] border border-slateBorder/60">
-                        <div>
-                            <p class="font-semibold text-white">Keyboard Mechanical Gaming</p>
-                            <p class="text-[10px] text-slate-400">2 units sold</p>
-                        </div>
-                        <span class="font-bold text-emerald-400">Rp 1.500.000</span>
-                    </div>
+                    @empty
+                        <p class="text-xs text-slate-500 text-center py-4">Belum ada data penjualan aktif.</p>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -190,10 +171,7 @@
 
     <script>
         const ctx = document.getElementById('reportsChart').getContext('2d');
-        
-        // Ambil data realtime dari ReportController
         const realtimeData = @json($chartData);
-
         new Chart(ctx, {
             type: 'bar',
             data: {

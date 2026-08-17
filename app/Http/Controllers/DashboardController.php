@@ -252,20 +252,59 @@ class DashboardController extends Controller
 
     public function reportsIndex()
     {
-        // 1. Total Revenue hanya menghitung yang statusnya BUKAN Returned
-        $totalSales = Transaction::where('status', '!=', 'Returned')->sum('total_amount');
+        // 1. Total Sales hanya menghitung transaksi Completed (non-Returned)
+        $totalSales = Transaction::where('status', '!=', 'Returned')->sum('total_amount') ?? 0;
         
         $totalProducts = Product::count();
         $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock_alert')->where('stock', '>', 0)->count();
         
-        // 2. Transaksi terbaru juga memfilter yang aktif saja
-        $recentTransactions = Transaction::with('details.product')
+        // 2. Transaksi Aktif (non-Returned)
+        $activeTransactions = Transaction::with('details.product')
             ->where('status', '!=', 'Returned')
             ->latest()
-            ->take(5)
             ->get();
 
-        return view('reports', compact('totalSales', 'totalProducts', 'lowStockCount', 'recentTransactions'));
+        // 3. Hitung Profit Margin Real-time yang sama persis dengan Dashboard
+        $totalCost = 0;
+        foreach ($activeTransactions as $tx) {
+            foreach ($tx->details as $detail) {
+                $purchasePrice = $detail->product->purchase_price ?? $detail->price;
+                $totalCost += ($purchasePrice * $detail->qty);
+            }
+        }
+
+        $avgMargin = $totalSales > 0 
+            ? round((($totalSales - $totalCost) / $totalSales) * 100, 1) 
+            : 0;
+
+        // 4. Query Top Products Fix (Mengambil dari detail transaksi Completed)
+        $topProducts = TransactionDetail::select('product_id', DB::raw('SUM(qty) as total_qty'), DB::raw('SUM(subtotal) as total_revenue'))
+            ->whereHas('transaction', function($q) {
+                $q->where('status', '!=', 'Returned');
+            })
+            ->groupBy('product_id')
+            ->orderByDesc('total_qty')
+            ->take(4)
+            ->with('product')
+            ->get();
+
+        // 5. Data Grafik Mingguan Sinkron (Bulan Ini)
+        $chartData = [
+            Transaction::where('status', '!=', 'Returned')->whereBetween('created_at', [now()->startOfMonth(), now()->startOfMonth()->addDays(6)])->sum('total_amount') ?? 0,
+            Transaction::where('status', '!=', 'Returned')->whereBetween('created_at', [now()->startOfMonth()->addDays(7), now()->startOfMonth()->addDays(13)])->sum('total_amount') ?? 0,
+            Transaction::where('status', '!=', 'Returned')->whereBetween('created_at', [now()->startOfMonth()->addDays(14), now()->startOfMonth()->addDays(20)])->sum('total_amount') ?? 0,
+            Transaction::where('status', '!=', 'Returned')->whereBetween('created_at', [now()->startOfMonth()->addDays(21), now()->endOfMonth()])->sum('total_amount') ?? 0,
+        ];
+
+        return view('reports', compact(
+            'totalSales', 
+            'totalProducts', 
+            'lowStockCount', 
+            'activeTransactions', 
+            'avgMargin', 
+            'topProducts', 
+            'chartData'
+        ));
     }
 
     public function notificationsIndex()

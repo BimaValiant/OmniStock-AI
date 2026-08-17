@@ -3,60 +3,65 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Transaction;
 use App\Models\Product;
-use Carbon\Carbon;
+use App\Models\Transaction;
+use App\Models\TransactionDetail;
+use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
     public function index()
     {
-        $totalSales = Transaction::sum('total_amount');
-        $recentTransactions = Transaction::with('details.product')->latest()->take(5)->get();
-        $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock_alert')->count();
-
-        // 1. Hitung Profit Margin Realtime (Sama seperti di Dashboard)
-        $totalCost = 0;
-        $allTransactions = Transaction::with('details.product')->get();
+        // 1. Total Sales HANYA yang 'Completed' -> biar sama kayak Dashboard (Rp 25.550.000)
+        $totalSales = Transaction::where('status', '!=', 'Returned')->sum('total_amount') ?? 0;
         
-        foreach ($allTransactions as $tx) {
+        $totalProducts = Product::count();
+        $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock_alert')->count();
+        
+        // 2. Transaksi Aktif (Total 4 Sales)
+        $recentTransactions = Transaction::with('details.product')
+            ->where('status', '!=', 'Returned')
+            ->latest()
+            ->get();
+
+        // 3. Profit Margin -> Biar sama 56% kayak Dashboard
+        $totalCost = 0;
+        foreach ($recentTransactions as $tx) {
             foreach ($tx->details as $detail) {
-                $purchasePrice = $detail->product->purchase_price ?? 0;
+                // Pastikan ambil harga beli (purchase_price), kalau kosong pakai harga jual (price)
+                $purchasePrice = $detail->product->purchase_price ?? $detail->price;
                 $totalCost += ($purchasePrice * $detail->qty);
             }
         }
+        $avgMargin = $totalSales > 0 ? round((($totalSales - $totalCost) / $totalSales) * 100, 1) : 0;
 
-        $profitMargin = $totalSales > 0 
-            ? round((($totalSales - $totalCost) / $totalSales) * 100, 1) 
-            : 0;
+        // 4. Top Products (Dari transaksi yg TIDAK diretur)
+        $topProducts = TransactionDetail::select('product_id', DB::raw('SUM(qty) as total_qty'), DB::raw('SUM(subtotal) as total_revenue'))
+            ->whereHas('transaction', function($q) {
+                $q->where('status', '!=', 'Returned');
+            })
+            ->groupBy('product_id')
+            ->orderByDesc('total_qty')
+            ->take(4)
+            ->with('product')
+            ->get();
 
-        // 2. Data Grafik 4 Minggu
-        $now = Carbon::now();
-        $year = $now->year;
-        $month = $now->month;
-
-        $w1 = Transaction::whereYear('created_at', $year)->whereMonth('created_at', $month)->whereDay('created_at', '>=', 1)->whereDay('created_at', '<=', 7)->sum('total_amount');
-        $w2 = Transaction::whereYear('created_at', $year)->whereMonth('created_at', $month)->whereDay('created_at', '>=', 8)->whereDay('created_at', '<=', 14)->sum('total_amount');
-        $w3 = Transaction::whereYear('created_at', $year)->whereMonth('created_at', $month)->whereDay('created_at', '>=', 15)->whereDay('created_at', '<=', 21)->sum('total_amount');
-        $w4 = Transaction::whereYear('created_at', $year)->whereMonth('created_at', $month)->whereDay('created_at', '>=', 22)->sum('total_amount');
-
-        $chartData = [(float)$w1, (float)$w2, (float)$w3, (float)$w4];
-
-        if (array_sum($chartData) == 0 && $totalSales > 0) {
-            $chartData = [
-                round($totalSales * 0.15),
-                round($totalSales * 0.25),
-                round($totalSales * 0.35),
-                round($totalSales * 0.25),
-            ];
-        }
+        // 5. Chart Data Mingguan (Filter non-Returned)
+        $chartData = [
+            Transaction::where('status', '!=', 'Returned')->whereBetween('created_at', [now()->startOfMonth(), now()->startOfMonth()->addDays(6)])->sum('total_amount') ?? 0,
+            Transaction::where('status', '!=', 'Returned')->whereBetween('created_at', [now()->startOfMonth()->addDays(7), now()->startOfMonth()->addDays(13)])->sum('total_amount') ?? 0,
+            Transaction::where('status', '!=', 'Returned')->whereBetween('created_at', [now()->startOfMonth()->addDays(14), now()->startOfMonth()->addDays(20)])->sum('total_amount') ?? 0,
+            Transaction::where('status', '!=', 'Returned')->whereBetween('created_at', [now()->startOfMonth()->addDays(21), now()->endOfMonth()])->sum('total_amount') ?? 0,
+        ];
 
         return view('reports', compact(
-            'totalSales',
-            'recentTransactions',
-            'lowStockCount',
-            'chartData',
-            'profitMargin'
+            'totalSales', 
+            'totalProducts', 
+            'lowStockCount', 
+            'recentTransactions', 
+            'avgMargin', 
+            'topProducts', 
+            'chartData'
         ));
     }
 }
