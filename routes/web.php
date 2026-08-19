@@ -63,6 +63,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/record-sale', [DashboardController::class, 'recordSale'])->name('products.record-sale');
 
     Route::post('/transactions/{id}/return', [DashboardController::class, 'returnTransaction'])->name('transactions.return');
+
+    // Tambahkan route ini di routes/web.php
+    Route::get('/transactions/{id}/print', [\App\Http\Controllers\TransactionController::class, 'printReceipt'])->name('transactions.print');
 });
 
 require __DIR__.'/auth.php';

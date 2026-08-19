@@ -192,7 +192,11 @@
                                                 <span class="px-2 py-1 rounded-full bg-[#142f2c] text-[#86efac] border border-[#166534] text-[10px] font-medium">Completed</span>
                                             @endif
                                         </td>
-                                        <td class="py-3 px-3 text-right">
+                                        <td class="py-3 px-3 text-right flex items-center justify-end gap-1.5">
+    <a href="{{ route('transactions.print', $trx->id) }}" target="_blank" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg text-[10px] font-semibold border border-slate-700 transition flex items-center gap-1">
+        🖨️ Struk
+    </a>
+
     @if($trx->status !== 'Returned')
         <form action="{{ route('transactions.return', $trx->id) }}" method="POST" onsubmit="return confirm('Yakin ingin meretur transaksi ini? Stok akan dikembalikan ke gudang.');" class="inline">
             @csrf
