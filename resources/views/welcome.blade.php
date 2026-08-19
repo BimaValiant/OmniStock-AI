@@ -235,13 +235,13 @@
         </div>
     </div>
 
-    <!-- Card 4: Retain Margin -->
+    <!-- Card 4: Net Profit & Margin -->
     <div class="bg-slateCard border border-slateBorder rounded-xl p-4 relative">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Avg Profit Margin</p>
-        <h2 class="font-headline text-2xl font-extrabold text-white mb-2">{{ number_format($avgMargin ?? 0, 1) }}%</h2>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Net Profit (Laba Bersih)</p>
+        <h2 class="font-headline text-2xl font-extrabold text-emerald-400 mb-2">Rp {{ number_format($netProfit ?? 0, 0, ',', '.') }}</h2>
         <div class="flex items-center gap-1.5 text-[11px]">
-            <span class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-semibold">Stable Rate</span>
-            <span class="text-slate-500">average margin</span>
+            <span class="bg-blue-950/60 text-blue-400 px-1.5 py-0.5 rounded font-semibold border border-blue-800/40">{{ number_format($avgMargin ?? 0, 1) }}% Margin</span>
+            <span class="text-slate-500">Omset - HPP</span>
         </div>
     </div>
 </div>
@@ -507,54 +507,65 @@
     </div>
 
     <!-- MODAL 3: EDIT PRODUCT -->
-    <div id="editProductModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-slateCard border border-slateBorder rounded-2xl w-full max-w-md p-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-headline font-bold text-white text-sm">Edit Product</h3>
-                <button onclick="closeModal('editProductModal')" class="text-slate-400 hover:text-white">✕</button>
+<div id="editProductModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-slateCard border border-slateBorder rounded-2xl w-full max-w-md p-6 shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-headline font-bold text-white text-sm">Edit Product</h3>
+            <button onclick="closeModal('editProductModal')" class="text-slate-400 hover:text-white">✕</button>
+        </div>
+        <form id="editProductForm" class="space-y-3 text-xs">
+            <input type="hidden" id="edit_product_id" name="id">
+            
+            <div>
+                <label class="block text-slate-400 mb-1">Product Name</label>
+                <input type="text" id="edit_name" name="name" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
             </div>
-            <form id="editProductForm" class="space-y-3 text-xs">
-                <input type="hidden" id="edit_product_id" name="id">
+
+            <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="block text-slate-400 mb-1">Product Name</label>
-                    <input type="text" id="edit_name" name="name" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-slate-400 mb-1">SKU</label>
-                        <input type="text" id="edit_sku" name="sku" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Category</label>
-                        <select id="edit_category_id" name="category_id" class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
-                            <option value="">General</option>
-                            @foreach($categories ?? [] as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-slate-400 mb-1">Stock Quantity</label>
-                        <input type="number" id="edit_stock" name="stock" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Min Stock Alert</label>
-                        <input type="number" id="edit_min_stock_alert" name="min_stock_alert" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
-                    </div>
+                    <label class="block text-slate-400 mb-1">SKU</label>
+                    <input type="text" id="edit_sku" name="sku" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-slate-400 mb-1">Selling Price (Rp)</label>
+                    <label class="block text-slate-400 mb-1">Category</label>
+                    <select id="edit_category_id" name="category_id" class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
+                        <option value="">General</option>
+                        @foreach($categories ?? [] as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-slate-400 mb-1">Stock Quantity</label>
+                    <input type="number" id="edit_stock" name="stock" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Min Stock Alert</label>
+                    <input type="number" id="edit_min_stock_alert" name="min_stock_alert" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
+                </div>
+            </div> <!-- Tag penutup ini yang tadinya ketinggalan -->
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-slate-400 mb-1">Purchase Price / Modal (Rp)</label>
+                    <input type="number" id="edit_cost_price" name="cost_price" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Selling Price / Jual (Rp)</label>
                     <input type="number" id="edit_selling_price" name="selling_price" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none">
                 </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('editProductModal')" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg">Cancel</button>
-                    <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg">Update Product</button>
-                </div>
-            </form>
-        </div>
+            </div>
+
+            <div class="pt-2 flex justify-end gap-2">
+                <button type="button" onclick="closeModal('editProductModal')" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg">Cancel</button>
+                <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg">Update Product</button>
+            </div>
+        </form>
     </div>
+</div>
 
     <!-- SCRIPTS LENGKAP -->
     <script>
@@ -904,6 +915,19 @@ document.addEventListener('click', (e) => {
         dropdown.classList.add('hidden');
     }
 });
+
+// Open Modal Edit & Fill Data
+        function openEditModal(product) {
+            document.getElementById('edit_product_id').value = product.id;
+            document.getElementById('edit_name').value = product.name;
+            document.getElementById('edit_sku').value = product.sku;
+            document.getElementById('edit_category_id').value = product.category_id || '';
+            document.getElementById('edit_stock').value = product.stock;
+            document.getElementById('edit_min_stock_alert').value = product.min_stock_alert;
+            document.getElementById('edit_cost_price').value = product.cost_price || product.purchase_price || 0;
+            document.getElementById('edit_selling_price').value = product.selling_price;
+            openModal('editProductModal');
+        }
     </script>
 </body>
 </html>

@@ -12,28 +12,30 @@ class ReportController extends Controller
 {
     public function index()
     {
-        // 1. Total Sales HANYA yang 'Completed' -> biar sama kayak Dashboard (Rp 25.550.000)
+        // 1. Total Sales (Revenue) HANYA yang 'Completed' / non-Returned
         $totalSales = Transaction::where('status', '!=', 'Returned')->sum('total_amount') ?? 0;
         
         $totalProducts = Product::count();
         $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock_alert')->count();
         
-        // 2. Transaksi Aktif (Total 4 Sales)
+        // 2. Transaksi Aktif (non-Returned)
         $recentTransactions = Transaction::with('details.product')
             ->where('status', '!=', 'Returned')
             ->latest()
             ->get();
 
-        // 3. Profit Margin -> Biar sama 56% kayak Dashboard
+        // 3. Hitung Total HPP (Cost), Laba Bersih (Net Profit), & Profit Margin
         $totalCost = 0;
         foreach ($recentTransactions as $tx) {
             foreach ($tx->details as $detail) {
-                // Pastikan ambil harga beli (purchase_price), kalau kosong pakai harga jual (price)
-                $purchasePrice = $detail->product->purchase_price ?? $detail->price;
-                $totalCost += ($purchasePrice * $detail->qty);
+                // Ambil harga modal (cost_price / purchase_price), jika kosong fallback ke harga jual saat transaksi
+                $costPrice = $detail->product->cost_price ?? $detail->product->purchase_price ?? $detail->price;
+                $totalCost += ($costPrice * $detail->qty);
             }
         }
-        $avgMargin = $totalSales > 0 ? round((($totalSales - $totalCost) / $totalSales) * 100, 1) : 0;
+
+        $netProfit = $totalSales - $totalCost;
+        $avgMargin = $totalSales > 0 ? round(($netProfit / $totalSales) * 100, 1) : 0;
 
         // 4. Top Products (Dari transaksi yg TIDAK diretur)
         $topProducts = TransactionDetail::select('product_id', DB::raw('SUM(qty) as total_qty'), DB::raw('SUM(subtotal) as total_revenue'))
@@ -59,6 +61,8 @@ class ReportController extends Controller
             'totalProducts', 
             'lowStockCount', 
             'recentTransactions', 
+            'totalCost',
+            'netProfit',
             'avgMargin', 
             'topProducts', 
             'chartData'

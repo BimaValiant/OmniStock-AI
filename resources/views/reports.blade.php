@@ -100,41 +100,45 @@
             </div>
         </div>
 
-        <!-- SUMMARY CARDS -->
+       <!-- SUMMARY CARDS -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <!-- Total Revenue / Omset -->
             <div class="bg-slateCard border border-slateBorder rounded-xl p-4">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Revenue</p>
                 <h2 class="font-headline text-2xl font-extrabold text-white mb-2">Rp {{ number_format($totalSales ?? 0, 0, ',', '.') }}</h2>
                 <div class="flex items-center gap-1.5 text-[11px]">
-                    <span class="bg-emerald-950/60 text-emerald-400 px-1.5 py-0.2 rounded font-semibold border border-emerald-800/40">+4.2%</span>
-                    <span class="text-slate-500">vs last month</span>
+                    <span class="bg-emerald-950/60 text-emerald-400 px-1.5 py-0.2 rounded font-semibold border border-emerald-800/40">Sales</span>
+                    <span class="text-slate-500">Total Omset</span>
                 </div>
             </div>
 
+            <!-- Total HPP / Modal -->
             <div class="bg-slateCard border border-slateBorder rounded-xl p-4">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Transactions</p>
-                <h2 class="font-headline text-2xl font-extrabold text-white mb-2">{{ isset($recentTransactions) ? $recentTransactions->count() : 0 }} Sales</h2>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total HPP (Modal)</p>
+                <h2 class="font-headline text-2xl font-extrabold text-slate-300 mb-2">Rp {{ number_format($totalCost ?? 0, 0, ',', '.') }}</h2>
                 <div class="flex items-center gap-1.5 text-[11px]">
-                    <span class="bg-emerald-950/60 text-emerald-400 px-1.5 py-0.2 rounded font-semibold border border-emerald-800/40">Active</span>
-                    <span class="text-slate-500">Completed orders</span>
+                    <span class="bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded font-semibold border border-slate-700">Cost</span>
+                    <span class="text-slate-500">Modal Barang Terjual</span>
                 </div>
             </div>
 
+            <!-- Net Profit / Laba Bersih -->
             <div class="bg-slateCard border border-slateBorder rounded-xl p-4">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Low Stock Count</p>
-                <h2 class="font-headline text-2xl font-extrabold text-amber-400 mb-2">{{ $lowStockCount ?? 0 }} Items</h2>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Net Profit (Laba Bersih)</p>
+                <h2 class="font-headline text-2xl font-extrabold text-emerald-400 mb-2">Rp {{ number_format($netProfit ?? 0, 0, ',', '.') }}</h2>
                 <div class="flex items-center gap-1.5 text-[11px]">
-                    <span class="bg-amber-950/80 text-amber-400 px-1.5 py-0.2 rounded font-semibold border border-amber-800/40">Attention</span>
-                    <span class="text-slate-400">Action required</span>
+                    <span class="bg-emerald-950/60 text-emerald-400 px-1.5 py-0.2 rounded font-semibold border border-emerald-800/40">Profit</span>
+                    <span class="text-slate-500">Omset - HPP Modal</span>
                 </div>
             </div>
 
+            <!-- Profit Margin % -->
             <div class="bg-slateCard border border-slateBorder rounded-xl p-4">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Profit Margin</p>
-                <h2 class="font-headline text-2xl font-extrabold text-white mb-2">{{ $avgMargin ?? 0 }}%</h2>
+                <h2 class="font-headline text-2xl font-extrabold text-blue-400 mb-2">{{ $avgMargin ?? 0 }}%</h2>
                 <div class="flex items-center gap-1.5 text-[11px]">
-                    <span class="bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded font-semibold">Stable</span>
-                    <span class="text-slate-500">Consistent average</span>
+                    <span class="bg-blue-950/60 text-blue-400 px-1.5 py-0.2 rounded font-semibold border border-blue-800/40">Margin</span>
+                    <span class="text-slate-500">Rata-rata Margin</span>
                 </div>
             </div>
         </div>

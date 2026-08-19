@@ -222,15 +222,16 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-slate-400 mb-1">Purchase Price / Modal (Rp) *</label>
-                        <input type="number" name="purchase_price" required placeholder="Harga beli" class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-slate-400 mb-1">Selling Price / Jual (Rp) *</label>
-                        <input type="number" name="selling_price" required placeholder="Harga jual" class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white focus:outline-none focus:border-blue-500">
-                    </div>
-                </div>
+                    <div class="grid grid-cols-2 gap-2">
+    <div>
+        <label class="block text-slate-400 mb-1">Cost Price / Modal (Rp)</label>
+        <input type="number" id="edit_cost_price" name="cost_price" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white">
+    </div>
+    <div>
+        <label class="block text-slate-400 mb-1">Selling Price (Rp)</label>
+        <input type="number" id="edit_selling_price" name="selling_price" required class="w-full bg-[#0B0F19] border border-slateBorder rounded-lg p-2 text-white">
+    </div>
+</div>
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="closeModal('addProductModal')" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-lg">Cancel</button>
                     <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg">Save Product</button>
@@ -360,6 +361,7 @@
             document.getElementById('edit_category_id').value = product.category_id || '';
             document.getElementById('edit_stock').value = product.stock;
             document.getElementById('edit_min_stock_alert').value = product.min_stock_alert;
+            document.getElementById('edit_cost_price').value = product.cost_price || 0; // <-- Penambahan baris ini
             document.getElementById('edit_selling_price').value = product.selling_price;
             openModal('editProductModal');
         }

@@ -42,28 +42,31 @@ class DashboardController extends Controller
         // 2. Statistics (Dinamis Real-time)
         $totalAssetValue  = Product::selectRaw('SUM(stock * selling_price) as total')->value('total') ?? 0;
         
-        // Ambil data barang menipis/habis untuk Notifikasi Lonceng Header
+        // Data barang menipis/habis untuk Notifikasi Lonceng Header
         $lowStockProducts = Product::whereColumn('stock', '<=', 'min_stock_alert')->orderBy('stock', 'asc')->get();
         $lowStockCount    = $lowStockProducts->count();
         
         $recentLogs       = AiChatLog::latest()->take(5)->get();
 
-        // Total akumulasi revenue agar presisi dengan halaman Transactions
+        // Total akumulasi revenue (Non-Returned)
         $monthlySales = Transaction::where('status', '!=', 'Returned')->sum('total_amount') ?? 0;
 
-        // Hitung Profit Margin Realtime
+        // Hitung Total HPP / Modal & Laba Bersih (Hanya Transaksi Non-Returned)
         $totalCost = 0;
-        $allTransactions = Transaction::with('details.product')->get();
+        $allTransactions = Transaction::with('details.product')
+            ->where('status', '!=', 'Returned')
+            ->get();
         
         foreach ($allTransactions as $tx) {
             foreach ($tx->details as $detail) {
-                $purchasePrice = $detail->product->purchase_price ?? 0;
-                $totalCost += ($purchasePrice * $detail->qty);
+                $costPrice = $detail->product->cost_price ?? $detail->product->purchase_price ?? 0;
+                $totalCost += ($costPrice * $detail->qty);
             }
         }
 
+        $netProfit = $monthlySales - $totalCost;
         $avgMargin = $monthlySales > 0 
-            ? round((($monthlySales - $totalCost) / $monthlySales) * 100, 1) 
+            ? round(($netProfit / $monthlySales) * 100, 1) 
             : 0;
 
         // Respons AJAX untuk live search/filter
@@ -73,7 +76,9 @@ class DashboardController extends Controller
                 'products'        => $products,
                 'lowStockCount'   => $lowStockCount,
                 'totalAssetValue' => $totalAssetValue,
-                'monthlySales'    => $monthlySales
+                'monthlySales'    => $monthlySales,
+                'netProfit'       => $netProfit,
+                'avgMargin'       => $avgMargin
             ]);
         }
 
@@ -85,6 +90,8 @@ class DashboardController extends Controller
             'lowStockCount',
             'recentLogs',
             'monthlySales',
+            'totalCost',
+            'netProfit',
             'avgMargin'
         ));
     }
@@ -128,10 +135,11 @@ class DashboardController extends Controller
             'category_id'     => 'nullable|exists:categories,id',
             'stock'           => 'required|integer|min:0',
             'min_stock_alert' => 'required|integer|min:0',
+            'cost_price'      => 'nullable|numeric|min:0',
             'selling_price'   => 'required|numeric|min:0',
         ]);
 
-        $validated['purchase_price'] = $request->purchase_price ?? $request->selling_price;
+        $validated['cost_price'] = $request->cost_price ?? $request->purchase_price ?? $request->selling_price;
 
         Product::create($validated);
 
@@ -192,10 +200,11 @@ class DashboardController extends Controller
             'category_id'     => 'nullable|exists:categories,id',
             'stock'           => 'required|integer|min:0',
             'min_stock_alert' => 'required|integer|min:0',
+            'cost_price'      => 'nullable|numeric|min:0',
             'selling_price'   => 'required|numeric|min:0',
         ]);
 
-        $validated['purchase_price'] = $request->purchase_price ?? $product->purchase_price ?? $request->selling_price;
+        $validated['cost_price'] = $request->cost_price ?? $request->purchase_price ?? $product->cost_price ?? $request->selling_price;
 
         $product->update($validated);
 
@@ -252,7 +261,7 @@ class DashboardController extends Controller
 
     public function reportsIndex()
     {
-        // 1. Total Sales hanya menghitung transaksi Completed (non-Returned)
+        // 1. Total Sales (non-Returned)
         $totalSales = Transaction::where('status', '!=', 'Returned')->sum('total_amount') ?? 0;
         
         $totalProducts = Product::count();
@@ -264,20 +273,21 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        // 3. Hitung Profit Margin Real-time yang sama persis dengan Dashboard
+        // 3. Hitung Profit Margin & Laba Bersih
         $totalCost = 0;
         foreach ($activeTransactions as $tx) {
             foreach ($tx->details as $detail) {
-                $purchasePrice = $detail->product->purchase_price ?? $detail->price;
-                $totalCost += ($purchasePrice * $detail->qty);
+                $costPrice = $detail->product->cost_price ?? $detail->product->purchase_price ?? $detail->price;
+                $totalCost += ($costPrice * $detail->qty);
             }
         }
 
+        $netProfit = $totalSales - $totalCost;
         $avgMargin = $totalSales > 0 
-            ? round((($totalSales - $totalCost) / $totalSales) * 100, 1) 
+            ? round(($netProfit / $totalSales) * 100, 1) 
             : 0;
 
-        // 4. Query Top Products Fix (Mengambil dari detail transaksi Completed)
+        // 4. Query Top Products
         $topProducts = TransactionDetail::select('product_id', DB::raw('SUM(qty) as total_qty'), DB::raw('SUM(subtotal) as total_revenue'))
             ->whereHas('transaction', function($q) {
                 $q->where('status', '!=', 'Returned');
@@ -288,7 +298,7 @@ class DashboardController extends Controller
             ->with('product')
             ->get();
 
-        // 5. Data Grafik Mingguan Sinkron (Bulan Ini)
+        // 5. Data Grafik Mingguan Sinkron
         $chartData = [
             Transaction::where('status', '!=', 'Returned')->whereBetween('created_at', [now()->startOfMonth(), now()->startOfMonth()->addDays(6)])->sum('total_amount') ?? 0,
             Transaction::where('status', '!=', 'Returned')->whereBetween('created_at', [now()->startOfMonth()->addDays(7), now()->startOfMonth()->addDays(13)])->sum('total_amount') ?? 0,
@@ -301,6 +311,8 @@ class DashboardController extends Controller
             'totalProducts', 
             'lowStockCount', 
             'activeTransactions', 
+            'totalCost',
+            'netProfit',
             'avgMargin', 
             'topProducts', 
             'chartData'

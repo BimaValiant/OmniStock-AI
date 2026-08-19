@@ -15,6 +15,7 @@ class Product extends Model
         'category_id',
         'stock',
         'min_stock_alert',
+        'cost_price',
         'selling_price',
     ];
 
