@@ -573,19 +573,70 @@
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-        // Chart.js Setup
-        const ctx = document.getElementById('salesChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                datasets: [
-                    { label: 'Actual Sales', data: [25, 40, 52, 75], borderColor: '#10B981', backgroundColor: 'transparent', borderWidth: 2, tension: 0.4, pointRadius: 0 },
-                    { label: 'AI Demand Forecast', data: [15, 30, 48, 62], borderColor: '#64748B', backgroundColor: 'transparent', borderWidth: 1.5, tension: 0.4, pointRadius: 0 }
-                ]
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('salesChart');
+    if (!ctx) return;
+
+    // Data riil dari Controller Laravel
+    const salesData = {!! json_encode($salesWeeklyUnits ?? [0, 0, 0, 0]) !!};
+    const demandData = {!! json_encode($demandWeeklyUnits ?? [0, 0, 0, 0]) !!};
+
+    // Reset chart lama jika sudah ada
+    if (window.mySalesChart) {
+        window.mySalesChart.destroy();
+    }
+
+    window.mySalesChart = new Chart(ctx.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: ['Wk 1 (1-7)', 'Wk 2 (8-14)', 'Wk 3 (15-21)', 'Wk 4 (22+)'],
+            datasets: [
+                {
+                    label: 'Sales (Units Sold)',
+                    data: salesData,
+                    borderColor: '#10B981', // Hijau Emerald
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true
+                },
+                {
+                    label: 'Inventory Demand',
+                    data: demandData,
+                    borderColor: '#6366F1', // Indigo
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    borderDash: [5, 5], // Garis putus-putus
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1, // Agar skala naik per 1 unit
+                        color: '#94A3B8'
+                    },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                },
+                x: {
+                    ticks: { color: '#94A3B8' },
+                    grid: { display: false }
+                }
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#1E293B' }, ticks: { color: '#64748B', font: { size: 10 } } }, y: { grid: { color: '#1E293B' }, ticks: { color: '#64748B', font: { size: 10 } } } } }
-        });
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: { color: '#94A3B8', boxWidth: 12 }
+                }
+            }
+        }
+    });
+});
 
         // Chat Toggle Handler
         const toggleBtn = document.getElementById('toggleChat');
@@ -828,17 +879,6 @@
             }
         });
 
-        // Open Modal Edit & Fill Data
-        function openEditModal(product) {
-            document.getElementById('edit_product_id').value = product.id;
-            document.getElementById('edit_name').value = product.name;
-            document.getElementById('edit_sku').value = product.sku;
-            document.getElementById('edit_category_id').value = product.category_id || '';
-            document.getElementById('edit_stock').value = product.stock;
-            document.getElementById('edit_min_stock_alert').value = product.min_stock_alert;
-            document.getElementById('edit_selling_price').value = product.selling_price;
-            openModal('editProductModal');
-        }
 
         // Handle Form Submit Update Product
         document.getElementById('editProductForm').addEventListener('submit', async (e) => {

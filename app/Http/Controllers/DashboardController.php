@@ -8,8 +8,10 @@ use App\Models\Category;
 use App\Models\AiChatLog;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
+use App\Models\StockMovement; // <-- DITAMBAHKAN
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon; // <-- DITAMBAHKAN
 
 class DashboardController extends Controller
 {
@@ -69,6 +71,50 @@ class DashboardController extends Controller
             ? round(($netProfit / $monthlySales) * 100, 1) 
             : 0;
 
+        // 3. GRAFIK DASHBOARD: DATA SALES VS DEMAND UNIT PER MINGGU (DITAMBAHKAN)
+        $wk1_start = Carbon::now()->startOfMonth();
+        $wk1_end   = Carbon::now()->startOfMonth()->addDays(6)->endOfDay();
+
+        $wk2_start = Carbon::now()->startOfMonth()->addDays(7)->startOfDay();
+        $wk2_end   = Carbon::now()->startOfMonth()->addDays(13)->endOfDay();
+
+        $wk3_start = Carbon::now()->startOfMonth()->addDays(14)->startOfDay();
+        $wk3_end   = Carbon::now()->startOfMonth()->addDays(20)->endOfDay();
+
+        $wk4_start = Carbon::now()->startOfMonth()->addDays(21)->startOfDay();
+        $wk4_end   = Carbon::now()->endOfMonth();
+
+        $weeks = [
+            ['start' => $wk1_start, 'end' => $wk1_end],
+            ['start' => $wk2_start, 'end' => $wk2_end],
+            ['start' => $wk3_start, 'end' => $wk3_end],
+            ['start' => $wk4_start, 'end' => $wk4_end],
+        ];
+
+        $salesWeeklyUnits = [];
+        $demandWeeklyUnits = [];
+
+        foreach ($weeks as $w) {
+            // Hitung total unit terjual dari Transaksi Non-Returned
+            $qtySold = TransactionDetail::whereHas('transaction', function($q) use ($w) {
+                $q->where('status', '!=', 'Returned')
+                  ->whereBetween('created_at', [$w['start'], $w['end']]);
+            })->sum('qty') ?? 0;
+
+            // Hitung total unit keluar dari Stock Movements
+            $qtyDemand = StockMovement::where('type', 'Out')
+                ->whereBetween('created_at', [$w['start'], $w['end']])
+                ->sum('quantity');
+
+            // Jika belum ada catatan StockMovement manual, fallback ke jumlah terjual
+            if ($qtyDemand == 0) {
+                $qtyDemand = $qtySold;
+            }
+
+            $salesWeeklyUnits[]  = (int) $qtySold;
+            $demandWeeklyUnits[] = (int) $qtyDemand;
+        }
+
         // Respons AJAX untuk live search/filter
         if ($request->ajax()) {
             return response()->json([
@@ -78,7 +124,9 @@ class DashboardController extends Controller
                 'totalAssetValue' => $totalAssetValue,
                 'monthlySales'    => $monthlySales,
                 'netProfit'       => $netProfit,
-                'avgMargin'       => $avgMargin
+                'avgMargin'       => $avgMargin,
+                'salesWeeklyUnits' => $salesWeeklyUnits,
+                'demandWeeklyUnits' => $demandWeeklyUnits,
             ]);
         }
 
@@ -92,7 +140,9 @@ class DashboardController extends Controller
             'monthlySales',
             'totalCost',
             'netProfit',
-            'avgMargin'
+            'avgMargin',
+            'salesWeeklyUnits',   // <-- DITAMBAHKAN
+            'demandWeeklyUnits'  // <-- DITAMBAHKAN
         ));
     }
 
@@ -261,19 +311,16 @@ class DashboardController extends Controller
 
     public function reportsIndex()
     {
-        // 1. Total Sales (non-Returned)
         $totalSales = Transaction::where('status', '!=', 'Returned')->sum('total_amount') ?? 0;
         
         $totalProducts = Product::count();
         $lowStockCount = Product::whereColumn('stock', '<=', 'min_stock_alert')->where('stock', '>', 0)->count();
         
-        // 2. Transaksi Aktif (non-Returned)
         $activeTransactions = Transaction::with('details.product')
             ->where('status', '!=', 'Returned')
             ->latest()
             ->get();
 
-        // 3. Hitung Profit Margin & Laba Bersih
         $totalCost = 0;
         foreach ($activeTransactions as $tx) {
             foreach ($tx->details as $detail) {
@@ -287,7 +334,6 @@ class DashboardController extends Controller
             ? round(($netProfit / $totalSales) * 100, 1) 
             : 0;
 
-        // 4. Query Top Products
         $topProducts = TransactionDetail::select('product_id', DB::raw('SUM(qty) as total_qty'), DB::raw('SUM(subtotal) as total_revenue'))
             ->whereHas('transaction', function($q) {
                 $q->where('status', '!=', 'Returned');
@@ -298,7 +344,6 @@ class DashboardController extends Controller
             ->with('product')
             ->get();
 
-        // 5. Data Grafik Mingguan Sinkron
         $chartData = [
             Transaction::where('status', '!=', 'Returned')->whereBetween('created_at', [now()->startOfMonth(), now()->startOfMonth()->addDays(6)])->sum('total_amount') ?? 0,
             Transaction::where('status', '!=', 'Returned')->whereBetween('created_at', [now()->startOfMonth()->addDays(7), now()->startOfMonth()->addDays(13)])->sum('total_amount') ?? 0,
